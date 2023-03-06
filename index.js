@@ -5,16 +5,18 @@ let bodyParser = require("body-parser");
 let http = require("http").Server(app);
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 
+//start Routing functions
 //add way for Express app to handle incoming requests and return back
 app.get("/", function (req, res) {
-  res.sendFile("/index.html", { root: "."});
+  res.sendFile("/index.html", { root: "." });
 });
 
 app.get("/create", function (req, res) {
-  res.sendFile("/create.html", { root: "."});
+  res.sendFile("/create.html", { root: "." });
 });
+
 
 //post/create function
 app.post("/create", function (req, res, next) {
@@ -39,6 +41,32 @@ app.post("/create", function (req, res, next) {
 app.set("port", process.env.PORT || 5000);
 http.listen(app.get("port"), function () {
   console.log("listening on port", app.get("port"));
+});
+
+//update and delete routing functions
+app.get("/get", function (req, res) {
+  res.sendFile("/get.html", { root: "." });
+});
+
+app.get("/get-client", function (req, res) {
+  client.connect((err) => {
+    client
+      .db("crmdb")
+      .collection("customers")
+      .findOne({ name: req.query.name }, function (err, result) {
+        if (err) throw err;
+        res.render("update", {
+          oldname: result.name,
+          oldaddress: result.address,
+          oldtelephone: result.telephone,
+          oldnote: result.note,
+          name: result.name,
+          address: result.address,
+          telephone: result.telephone,
+          note: result.note,
+        });
+      });
+  });
 });
 
 //add dependency for mongoDB client
