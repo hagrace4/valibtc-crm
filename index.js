@@ -6,6 +6,9 @@ let http = require("http").Server(app);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.engine("pug", require("pug:").__express);
+app.set("views", ".");
+app.set("view engine", "pug");
 
 //start Routing functions
 //add way for Express app to handle incoming requests and return back
