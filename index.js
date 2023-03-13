@@ -40,6 +40,65 @@ app.post("/create", function (req, res, next) {
   res.send("Customer created");
 })
 
+app.post("/update", function (req, res) {
+  client.connect((err) => {
+    if (err) throw err;
+    let query = {
+      name: req.body.oldname,
+      address: req.body.oldaddress,
+      telephone: req.body.oldtelephone,
+      note: req.body.oldnote,
+    };
+    let newvalues = {
+      $set: {
+        name: req.body.name,
+        address: req.body.address,
+        telephone: req.body.telephone,
+        note: req.body.note,
+      },
+    };
+    client
+      .db("crmdb")
+      .collection("customers")
+      .updateOne(query, newvalues, function (err, result) {
+        if (err) throw err;
+        console.log("1 document updated");
+        res.render("update", {
+          message: "Customer updated!",
+          oldname: req.body.name,
+          oldaddress: req.body.address,
+          oldtelephone: req.body.telephone,
+          oldnote: req.body.note,
+          name: req.body.name,
+          address: req.body.address,
+          telephone: req.body.telephone,
+          note: req.body.note,
+        });
+      });
+  });
+});
+
+app.post("/delete", function (req, res) {
+  client.connect((err) => {
+    if (err) throw err;
+    let query = {
+      name: req.body.name,
+      address: req.body.address ? req.body.address : null,
+      telephone: req.body.telephone ? req.body.telephone : null,
+      note: req.body.note ? req.body.note : null,
+    };
+    client
+      .db("crmdb")
+      .collection("customer")
+      .deleteOne(query, function (err, obj) {
+        if (err) throw err;
+        console.log("1 document deleted");
+        res.send(`Customer ${req.body.name} deleted`);
+      });
+  });
+});
+
+
 //set express server to run
 app.set("port", process.env.PORT || 5000);
 http.listen(app.get("port"), function () {
