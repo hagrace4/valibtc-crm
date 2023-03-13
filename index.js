@@ -40,6 +40,8 @@ app.post("/create", function (req, res, next) {
   res.send("Customer created");
 })
 
+
+//update function
 app.post("/update", function (req, res) {
   client.connect((err) => {
     if (err) throw err;
@@ -78,6 +80,7 @@ app.post("/update", function (req, res) {
   });
 });
 
+//delete function
 app.post("/delete", function (req, res) {
   client.connect((err) => {
     if (err) throw err;
@@ -89,7 +92,7 @@ app.post("/delete", function (req, res) {
     };
     client
       .db("crmdb")
-      .collection("customer")
+      .collection("customers")
       .deleteOne(query, function (err, obj) {
         if (err) throw err;
         console.log("1 document deleted");
