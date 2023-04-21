@@ -1,3 +1,6 @@
+// dependancies
+require('dotenv').config()
+
 //add dependencies for express
 let express = require("express");
 let app = express();
