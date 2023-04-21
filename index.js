@@ -1,3 +1,9 @@
+//User Auth dependancies
+const passport = require('./passport-config');
+const jwt = require('jsonwebtoken');
+const session = require('express-session');
+const User = require('./models/User');
+
 // dependancies
 require('dotenv').config()
 
@@ -12,20 +18,84 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.engine("pug", require("pug").__express);
 app.set("views", ".");
 app.set("view engine", "pug");
+// middleware config
+app.use(passport.initialize());
+app.use(session({ secret: process.env.JWT_SECRET, resave: false, saveUninitialized: true }));
+
+
+const authenticateEmployee = (req, res, next) => {
+  passport.authenticate('jwt', { session: false }, (err, user, info) => {
+    if (err) return next(err);
+    if (!user) return res.status(401).send('Unauthorized');
+    if (user.role !== 'Employee') return res.status(403).send('Forbidden');
+
+    req.user = user;
+    next();
+  })(req, res, next);
+};
+
+
+app.get("/", function (req, res) {
+  res.sendFile("/index.html", { root: "." });
+});
+
+app.get("/login", function (req, res) {
+  res.sendFile("/login.html", { root: "." });
+});
+
+app.get("/register", function (req, res) {
+  res.sendFile("/register.html", { root: "." });
+});
+
 
 //start Routing functions
 //add way for Express app to handle incoming requests and return back
-app.get("/", function (req, res) {
-  res.sendFile("/index.html", { root: "." });
+app.get('/create', authenticateEmployee, (req, res) => {
+  res.sendFile('/create.html', { root: '.' });
 });
 
 app.get("/create", function (req, res) {
   res.sendFile("/create.html", { root: "." });
 });
 
+// Register route
+app.post('/register', async (req, res) => {
+  const { username, password, role } = req.body;
+
+  try {
+    const newUser = new User({ username, password, role });
+    await newUser.save();
+    res.json({ message: 'User registered' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error registering the user' });
+  }
+});
+
+// Login route
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    const user = await User.findOne({ username });
+    if (!user || !(await user.comparePassword(password))) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
+
+    const payload = {
+      sub: user._id,
+      role: user.role,
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token });
+  } catch (error) {
+    res.status(500).json({ error: 'Error logging in' });
+  }
+});
+
 
 //post/create function
-app.post("/create", function (req, res, next) {
+app.post('/create', authenticateEmployee, (req, res, next) => {
   client.connect((err) => {
     const customers = client.db("crmdb").collection("customers");
 
@@ -41,11 +111,11 @@ app.post("/create", function (req, res, next) {
     });
   });
   res.send("Customer created");
-})
+});
 
 
 //update function
-app.post("/update", function (req, res) {
+app.post('/update', authenticateEmployee, (req, res) => {
   client.connect((err) => {
     if (err) throw err;
     let query = {
