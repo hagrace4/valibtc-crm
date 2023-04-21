@@ -13,11 +13,16 @@ let app = express();
 let bodyParser = require("body-parser");
 let http = require("http").Server(app);
 
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.engine("pug", require("pug").__express);
 app.set("views", ".");
 app.set("view engine", "pug");
+
+//to serve static files
+app.use(express.static(__dirname + '/public'));
+
 // middleware config
 app.use(passport.initialize());
 app.use(session({ secret: process.env.JWT_SECRET, resave: false, saveUninitialized: true }));
